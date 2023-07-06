@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "817735480809",
+    "project_id": "complypro-bd475",
+    "storage_bucket": "complypro-bd475.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:817735480809:android:88098f935c38dcc5870778",
+        "android_client_info": {
+          "package_name": "com.app.treo.dotcomplypro"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "817735480809-vr5ec7q8p2kqom87bereaet5iaf1nb8q.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCHHI1e9vedKvLSP_OAZueHFTLR9bNR_fA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "817735480809-vr5ec7q8p2kqom87bereaet5iaf1nb8q.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
