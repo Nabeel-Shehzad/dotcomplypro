@@ -90,6 +90,14 @@ class _LiveNotificationsState extends State<LiveNotifications> {
                 .toString();
       });
       _progressDialog!.close();
+    } else{
+      _progressDialog!.close();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('There\'s no Notifications for this user.'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 

@@ -407,7 +407,7 @@ class _PaymentState extends State<Payment> {
               width: double.infinity,
               child: ElevatedButton(
                   onPressed: () async {
-                    await makePayment('1');
+                    await makePayment(total.toInt().toString());
                   },
                   child: Text('Make Payment of \$$total').text.size(18).make()),
             ),

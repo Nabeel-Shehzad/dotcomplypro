@@ -1,19 +1,13 @@
 import 'package:dotcomplypro/screens/pay/payment.dart';
 import 'package:flutter/material.dart';
 import 'package:velocity_x/velocity_x.dart';
-class Welcome extends StatefulWidget {
-  const Welcome({super.key});
 
-  @override
-  State<Welcome> createState() => _WelcomeState();
-}
-
-class _WelcomeState extends State<Welcome> {
+class Welcome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Center(
+        child: SingleChildScrollView(
           child: Column(
             children: [
               SizedBox(
@@ -43,7 +37,6 @@ class _WelcomeState extends State<Welcome> {
                 style: TextStyle(fontSize: 16),
               ),
               SizedBox(height: 32),
-              Spacer(),
               Align(
                 alignment: Alignment.centerRight,
                 child: ElevatedButton.icon(

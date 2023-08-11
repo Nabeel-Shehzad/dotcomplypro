@@ -80,7 +80,7 @@ class _LoginState extends State<Login> {
           context,
           MaterialPageRoute(
             builder: (context) =>
-                isPaymentDone ? const Home() : const Welcome(),
+                isPaymentDone ? const Home() : Welcome(),
           ),
         );
       } else {
@@ -172,7 +172,6 @@ class _LoginState extends State<Login> {
                       style: TextStyle(fontSize: 16),
                       decoration: InputDecoration(
                         labelText: 'Email',
-                        suffix: Text('@dot.com'),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10.0),
                         ),

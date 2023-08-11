@@ -174,7 +174,6 @@ class _RegisterState extends State<Register> {
                       style: TextStyle(fontSize: 16),
                       decoration: InputDecoration(
                         labelText: 'Email',
-                        suffix: Text('@dot.com'),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10.0),
                         ),
