@@ -1,7 +1,4 @@
-
-
 import 'dart:io';
-import 'package:app_settings/app_settings.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -87,7 +84,6 @@ class NotificationServices {
         print('user granted provisional permission');
       }
     } else {
-      AppSettings.openNotificationSettings();
       if (kDebugMode) {
         print('user denied permission');
       }

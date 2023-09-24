@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:sn_progress_dialog/progress_dialog.dart';
 import 'package:velocity_x/velocity_x.dart';
 import 'package:http/http.dart' as http;
@@ -15,16 +18,16 @@ class BOC extends StatefulWidget {
 }
 
 class _BOCState extends State<BOC> {
+  Map<String, dynamic>? paymentIntentData;
   final _formKey = GlobalKey<FormState>();
   ProgressDialog? _progressDialog;
-
 
   TextEditingController dotNumber = TextEditingController();
   TextEditingController legalName = TextEditingController();
   TextEditingController dba = TextEditingController();
   TextEditingController state = TextEditingController();
 
-  Future<void> _uploadData(BuildContext context) async{
+  Future<void> _uploadData(BuildContext context) async {
     _progressDialog = ProgressDialog(context: context);
     _progressDialog!.show(
       max: 100,
@@ -38,7 +41,7 @@ class _BOCState extends State<BOC> {
     String dba = this.dba.text;
     String state = this.state.text;
 
-    var request = http.MultipartRequest('POST',Uri.parse(Links.boc));
+    var request = http.MultipartRequest('POST', Uri.parse(Links.boc));
     request.fields['user_id'] = userId;
     request.fields['dot_number'] = dotNumber;
     request.fields['legal_name'] = legalName;
@@ -49,7 +52,7 @@ class _BOCState extends State<BOC> {
 
     String responseData = await response.stream.bytesToString();
 
-    if(response.statusCode == 200){
+    if (response.statusCode == 200) {
       //clear fields
       this.dotNumber.clear();
       this.legalName.clear();
@@ -62,11 +65,12 @@ class _BOCState extends State<BOC> {
           context: context,
           builder: (BuildContext context) => CustomDialog(
             title: 'Success',
-            content: 'Your BOC-3 filling has been submitted successfully.',
+            content:
+                'Your BOC-3 has been submitted. Our team is working on your behalf and will update you when your filing is complete. Check back soon to access your BOC-3.',
           ),
         );
       });
-    } else{
+    } else {
       _progressDialog!.close();
       Future.microtask(() {
         showDialog(
@@ -90,6 +94,10 @@ class _BOCState extends State<BOC> {
             Text(
               'BOC-3 Filling',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            Text(
+              'Interstate carriers must file separate electronic BOC-3 forms for each authority to designate agents to receive legal documents if sued outside their home state, and DOT operating authority is only granted after filing insurance. All sales are final.',
+              style: TextStyle(fontSize: 16),
             ),
             Container(
               height: 15,
@@ -188,10 +196,10 @@ class _BOCState extends State<BOC> {
               child: ElevatedButton(
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
-                      _uploadData(context);
+                      makePayment('39');
                     }
                   },
-                  child: Text('Submit Form').text.size(20).make()),
+                  child: Text('Purchase Now - \$39.00').text.size(20).make()),
             ),
             Container(
               height: 15,
@@ -200,5 +208,107 @@ class _BOCState extends State<BOC> {
         ).p8(),
       ),
     );
+  }
+
+  Future<void> makePayment(String payment) async {
+    try {
+      paymentIntentData = await createPaymentIntent(payment, 'USD');
+      await Stripe.instance
+          .initPaymentSheet(
+              paymentSheetParameters: SetupPaymentSheetParameters(
+            paymentIntentClientSecret: paymentIntentData!['client_secret'],
+            // applePay: PaymentSheetApplePay(merchantCountryCode: 'US'),
+            style: ThemeMode.dark,
+            merchantDisplayName: 'Nabeel Shehzad',
+          ))
+          .then((value) => {});
+      await displayPaymentSheet();
+    } catch (e) {
+      print("Stripe Exception: ${e.toString()}");
+    }
+  }
+
+  displayPaymentSheet() async {
+    try {
+      await Stripe.instance
+          .presentPaymentSheet(
+              //       parameters: PresentPaymentSheetParameters(
+              // clientSecret: paymentIntentData!['client_secret'],
+              // confirmPayment: true,
+              // )
+              )
+          .then((newValue) async {
+        await _uploadData(context);
+
+        paymentIntentData = null;
+      }).onError((error, stackTrace) {
+        print('Exception/DISPLAYPAYMENTSHEET==> $error $stackTrace');
+        showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text('Payment Failed'),
+                content: Text('Reason: $error'),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text('Ok'),
+                  ),
+                ],
+              );
+            });
+      });
+    } on StripeException catch (e) {
+      print('Exception/DISPLAYPAYMENTSHEET==> $e');
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Payment Failed'),
+            content: Text('Reason: $e'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('Ok'),
+              ),
+            ],
+          );
+        },
+      );
+    } catch (e) {
+      print('$e');
+    }
+  }
+
+  createPaymentIntent(String amount, String currency) async {
+    try {
+      Map<String, dynamic> body = {
+        'amount': calculatePayment(amount),
+        'currency': currency,
+        'payment_method_types[]': 'card'
+      };
+
+      var response = await http.post(
+          Uri.parse('https://api.stripe.com/v1/payment_intents'),
+          body: body,
+          headers: {
+            'Authorization':
+                'Bearer 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',
+            'Content-Type': 'application/x-www-form-urlencoded'
+          });
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      print("Stripe Exception: ${e.toString()}");
+    }
+  }
+
+  calculatePayment(String amount) {
+    final price = int.parse(amount) * 100;
+    return price.toString();
   }
 }

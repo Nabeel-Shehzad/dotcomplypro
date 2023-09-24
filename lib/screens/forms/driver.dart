@@ -12,6 +12,8 @@ import 'package:http/http.dart' as http;
 import '../../utils/custom_dialog.dart';
 import '../../utils/links.dart';
 import '../../utils/logged_in_user.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pdfLib;
 
 class Driver extends StatefulWidget {
   const Driver({Key? key}) : super(key: key);
@@ -63,6 +65,28 @@ class _DriverState extends State<Driver> {
       TextEditingController();
 
   ProgressDialog? _progressDialog;
+
+  Future<File> createEmptyPdf() async {
+    final pdf = pdfLib.Document();
+
+    // Add an empty page to the PDF
+    pdf.addPage(
+      pdfLib.Page(
+        pageFormat: PdfPageFormat.a4,
+        build: (context) {
+          return pdfLib.Center(
+            child: pdfLib.Text("This is an empty PDF"),
+          );
+        },
+      ),
+    );
+
+    // Save the PDF to the specified file path
+    final file = File('example.pdf');
+    await file.writeAsBytes(await pdf.save());
+    return file;
+
+  }
 
   Future<void> _uploadData(BuildContext c) async {
     _progressDialog = ProgressDialog(context: context);
@@ -120,6 +144,7 @@ class _DriverState extends State<Driver> {
     request.fields['miscellaneous'] = miscellaneous;
     request.fields['date_terminated'] = driverDateTerminated;
 
+
     // Add file names to the request
     request.fields['annual_review_record'] =
         File(driverAnnualDrivingRecordController.text).path.split('/').last;
@@ -135,42 +160,54 @@ class _DriverState extends State<Driver> {
         File(driverPersonnelMattersController.text).path.split('/').last;
 
     // Add files to the request
-    request.files.add(
-      await http.MultipartFile.fromPath(
-        'annual_review_record',
-        driverAnnualDrivingRecordController.text,
-      ),
-    );
-    request.files.add(
-      await http.MultipartFile.fromPath(
-        'driver_lic',
-        driverCopyOfCDLController.text,
-      ),
-    );
-    request.files.add(
-      await http.MultipartFile.fromPath(
-        'drug_screen',
-        driverDrugScreenController.text,
-      ),
-    );
-    request.files.add(
-      await http.MultipartFile.fromPath(
-        'medical_exam',
-        driverMedicalExamController.text,
-      ),
-    );
-    request.files.add(
-      await http.MultipartFile.fromPath(
-        'employment_application',
-        driverEmploymentApplicationController.text,
-      ),
-    );
-    request.files.add(
-      await http.MultipartFile.fromPath(
-        'personnel_matters',
-        driverPersonnelMattersController.text,
-      ),
-    );
+    if(driverAnnualDrivingRecordController.text.isNotEmpty){
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'annual_review_record',
+          driverAnnualDrivingRecordController.text,
+        ),
+      );
+    }
+    if(driverCopyOfCDLController.text.isNotEmpty){
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'driver_lic',
+          driverCopyOfCDLController.text,
+        ),
+      );
+    }
+    if(driverDrugScreenController.text.isNotEmpty){
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'drug_screen',
+          driverDrugScreenController.text,
+        ),
+      );
+    }
+    if(driverMedicalExamController.text.isNotEmpty){
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'medical_exam',
+          driverMedicalExamController.text,
+        ),
+      );
+    }
+    if(driverEmploymentApplicationController.text.isNotEmpty){
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'employment_application',
+          driverEmploymentApplicationController.text,
+        ),
+      );
+    }
+    if(driverPersonnelMattersController.text.isNotEmpty){
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'personnel_matters',
+          driverPersonnelMattersController.text,
+        ),
+      );
+    }
 
     var response = await request.send();
 
@@ -273,12 +310,6 @@ class _DriverState extends State<Driver> {
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please enter your Hire Date';
-                  }
-                  return null;
-                },
                 onTap: () async {
                   final newSelectedDatePicker =
                       await platformDatePicker.showPlatformDatePicker(
@@ -309,12 +340,6 @@ class _DriverState extends State<Driver> {
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please enter your Address';
-                  }
-                  return null;
-                },
               ),
             ),
             Container(
@@ -332,12 +357,6 @@ class _DriverState extends State<Driver> {
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please enter your Hire Date';
-                  }
-                  return null;
-                },
                 onTap: () async {
                   final newSelectedDatePicker =
                       await platformDatePicker.showPlatformDatePicker(
@@ -367,12 +386,6 @@ class _DriverState extends State<Driver> {
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please enter your SSN';
-                  }
-                  return null;
-                },
               ),
             ),
             Container(
@@ -389,7 +402,7 @@ class _DriverState extends State<Driver> {
                 formatInput: true,
                 validator: (value) {
                   if (value!.isEmpty) {
-                    return 'Please enter your Email';
+                    return 'Please enter your phone number';
                   }
                   return null;
                 },
@@ -409,12 +422,6 @@ class _DriverState extends State<Driver> {
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please enter your License Number';
-                  }
-                  return null;
-                },
               ),
             ),
             Container(
@@ -431,12 +438,6 @@ class _DriverState extends State<Driver> {
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please enter your License State';
-                  }
-                  return null;
-                },
               ),
             ),
             Container(
@@ -454,12 +455,6 @@ class _DriverState extends State<Driver> {
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please enter License Expiry Date';
-                  }
-                  return null;
-                },
                 onTap: () async {
                   final newSelectedDatePicker =
                       await platformDatePicker.showPlatformDatePicker(
@@ -490,18 +485,14 @@ class _DriverState extends State<Driver> {
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please Choose Record';
-                  }
-                  return null;
-                },
                 onTap: () async {
                   FilePickerResult? result =
                       await FilePicker.platform.pickFiles();
                   if (result != null && result.files.isNotEmpty) {
                     driverAnnualDrivingRecordController.text =
                         result.files.first.path!;
+                  }else{
+                    driverAnnualDrivingRecordController.text = "";
                   }
                 },
               ),
@@ -522,12 +513,6 @@ class _DriverState extends State<Driver> {
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please enter Due Date';
-                  }
-                  return null;
-                },
                 onTap: () async {
                   final newSelectedDatePicker =
                       await platformDatePicker.showPlatformDatePicker(
@@ -558,17 +543,14 @@ class _DriverState extends State<Driver> {
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please Choose CDL';
-                  }
-                  return null;
-                },
                 onTap: () async {
                   FilePickerResult? result =
                       await FilePicker.platform.pickFiles();
                   if (result != null && result.files.isNotEmpty) {
                     driverCopyOfCDLController.text = result.files.first.path!;
+                  }
+                  else{
+                    driverCopyOfCDLController.text = "";
                   }
                 },
               ),
@@ -591,12 +573,6 @@ class _DriverState extends State<Driver> {
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please Choose option';
-                  }
-                  return null;
-                },
                 items: [
                   DropdownMenuItem(
                     value: "Yes",
@@ -714,17 +690,13 @@ class _DriverState extends State<Driver> {
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please Choose Drug Screens';
-                  }
-                  return null;
-                },
                 onTap: () async {
                   FilePickerResult? result =
                       await FilePicker.platform.pickFiles();
                   if (result != null && result.files.isNotEmpty) {
                     driverDrugScreenController.text = result.files.first.path!;
+                  }else{
+                    driverDrugScreenController.text = "";
                   }
                 },
               ),
@@ -744,17 +716,13 @@ class _DriverState extends State<Driver> {
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please Choose Medical Exam';
-                  }
-                  return null;
-                },
                 onTap: () async {
                   FilePickerResult? result =
                       await FilePicker.platform.pickFiles();
                   if (result != null && result.files.isNotEmpty) {
                     driverMedicalExamController.text = result.files.first.path!;
+                  }else{
+                    driverMedicalExamController.text = "";
                   }
                 },
               ),
@@ -774,12 +742,6 @@ class _DriverState extends State<Driver> {
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please enter Expiry Date';
-                  }
-                  return null;
-                },
                 onTap: () async {
                   final newSelectedDatePicker =
                       await platformDatePicker.showPlatformDatePicker(
@@ -810,18 +772,14 @@ class _DriverState extends State<Driver> {
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please Choose Application';
-                  }
-                  return null;
-                },
                 onTap: () async {
                   FilePickerResult? result =
                       await FilePicker.platform.pickFiles();
                   if (result != null && result.files.isNotEmpty) {
                     driverEmploymentApplicationController.text =
                         result.files.first.path!;
+                  }else{
+                    driverEmploymentApplicationController.text = "";
                   }
                 },
               ),
@@ -841,18 +799,14 @@ class _DriverState extends State<Driver> {
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please Choose Personnel Matters';
-                  }
-                  return null;
-                },
                 onTap: () async {
                   FilePickerResult? result =
                       await FilePicker.platform.pickFiles();
                   if (result != null && result.files.isNotEmpty) {
                     driverPersonnelMattersController.text =
                         result.files.first.path!;
+                  }else{
+                    driverPersonnelMattersController.text = "";
                   }
                 },
               ),
@@ -872,12 +826,6 @@ class _DriverState extends State<Driver> {
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please enter your Miscellaneous';
-                  }
-                  return null;
-                },
               ),
             ),
             Container(
@@ -895,12 +843,6 @@ class _DriverState extends State<Driver> {
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please enter Date Terminated';
-                  }
-                  return null;
-                },
                 onTap: () async {
                   final newSelectedDatePicker =
                       await platformDatePicker.showPlatformDatePicker(
@@ -924,9 +866,9 @@ class _DriverState extends State<Driver> {
               width: double.maxFinite,
               child: ElevatedButton(
                   onPressed: () {
-                    if (_formkey.currentState!.validate()) {
-                      _uploadData(context);
-                    }
+                    //if (_formkey.currentState!.validate()) {
+                    _uploadData(context);
+                    //}
                   },
                   child: Text('Submit Form').text.size(20).make()),
             ),

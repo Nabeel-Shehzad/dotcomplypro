@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dotcomplypro/screens/auth/register.dart';
+import 'package:dotcomplypro/screens/password/reset_password.dart';
 import 'package:dotcomplypro/screens/pay/payment.dart';
 import 'package:dotcomplypro/screens/pay/welcome.dart';
 
@@ -73,14 +74,14 @@ class _LoginState extends State<Login> {
         print('token:  $token');
         sendToken(User.uid, token);
 
-        bool isPaymentDone = await checkIfPaymentDone(User.uid);
+        //bool isPaymentDone = await checkIfPaymentDone(User.uid);
 
         _progressDialog!.close();
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) =>
-                isPaymentDone ? const Home() : Welcome(),
+                Home(),
           ),
         );
       } else {
@@ -229,6 +230,18 @@ class _LoginState extends State<Login> {
                   ),
                   Container(
                     height: 15,
+                  ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.push(context,
+                            MaterialPageRoute(builder: (context) {
+                          return ResetPassword();
+                        }));
+                      },
+                      child: Text('Forgot Password?'),
+                    ),
                   ),
                   Align(
                     alignment: Alignment.centerRight,

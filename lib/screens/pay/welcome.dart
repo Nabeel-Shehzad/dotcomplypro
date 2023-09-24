@@ -37,8 +37,8 @@ class Welcome extends StatelessWidget {
                 style: TextStyle(fontSize: 16),
               ),
               SizedBox(height: 32),
-              Align(
-                alignment: Alignment.centerRight,
+              Container(
+                width: double.maxFinite,
                 child: ElevatedButton.icon(
                   onPressed: () {
                     Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Payment(flag: false,)));

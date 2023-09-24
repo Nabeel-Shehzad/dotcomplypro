@@ -1,5 +1,8 @@
+import 'dart:convert';
 import 'dart:io';
+import 'package:dotcomplypro/screens/card/success.dart';
 import 'package:dotcomplypro/utils/links.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:file_picker/file_picker.dart';
@@ -19,8 +22,12 @@ class Drug extends StatefulWidget {
 
 class _DrugState extends State<Drug> {
   final _formKey = GlobalKey<FormState>();
+  Map<String, dynamic>? paymentIntentData;
   List<File> _files = List.generate(6, (_) => File(''));
   ProgressDialog? _progressDialog;
+  bool drugScreenValue = false;
+  bool drugTestValue = false;
+  int price = 0;
 
   List<TextEditingController> _controllers = [];
 
@@ -71,6 +78,9 @@ class _DrugState extends State<Drug> {
       request.files.add(multipartFile);
     }
 
+    request.fields['test'] = drugTestValue.toString();
+    request.fields['screen'] = drugScreenValue.toString();
+
     var response = await request.send();
 
     try {
@@ -81,15 +91,12 @@ class _DrugState extends State<Drug> {
           _controllers = List.generate(6, (_) => TextEditingController());
         });
 
-        Future.microtask(() {
-          showDialog(
-            context: context,
-            builder: (BuildContext context) => CustomDialog(
-              title: 'Success',
-              content: 'Drug & Alcohol Program data uploaded successfully!'
-            ),
-          );
-        });
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => Success(),
+          ),
+        );
       } else {
         _progressDialog!.close();
         Future.microtask(() {
@@ -280,15 +287,88 @@ class _DrugState extends State<Drug> {
               height: 15,
             ),
             Container(
+              width: double.maxFinite,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Expanded(
+                    flex: 1,
+                    child: Text('Pre-Employment Drug Test: ',
+                        style: TextStyle(fontSize: 16)),
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: Checkbox(
+                      value: drugTestValue,
+                      onChanged: (bool? value) {
+                        setState(() {
+                          drugTestValue = value!;
+                          if (drugTestValue == true) {
+                            price = price + 224;
+                          } else {
+                            price = price - 224;
+                            if (price < 0) {
+                              price = 0;
+                            }
+                          }
+                        });
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ).px(8),
+            Container(
+              height: 15,
+            ),
+            Container(
+              width: double.maxFinite,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Expanded(
+                    flex: 1,
+                    child: Text('No Pre-Employment Drug Screen: ',
+                        style: TextStyle(fontSize: 16)),
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: Checkbox(
+                      value: drugScreenValue,
+                      onChanged: (bool? value) {
+                        setState(() {
+                          drugScreenValue = value!;
+                          if (drugScreenValue == true) {
+                            price = price + 149;
+                          } else {
+                            price = price - 149;
+                            if (price < 0) {
+                              price = 0;
+                            }
+                          }
+                        });
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ).px(8),
+            Container(
+              height: 15,
+            ),
+            Container(
               height: 50,
               width: double.maxFinite,
               child: ElevatedButton(
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
+                      if (price > 0) {
+                        makePayment(price.toString());
+                      }
                       _uploadFile(context);
                     }
                   },
-                  child: Text('Submit Form').text.size(20).make()),
+                  child: Text('Purchase Now \$$price').text.size(20).make()),
             ),
             Container(
               height: 15,
@@ -297,5 +377,105 @@ class _DrugState extends State<Drug> {
         ).p8(),
       ),
     );
+  }
+
+  Future<void> makePayment(String payment) async {
+    try {
+      paymentIntentData = await createPaymentIntent(payment, 'USD');
+      await Stripe.instance
+          .initPaymentSheet(
+              paymentSheetParameters: SetupPaymentSheetParameters(
+            paymentIntentClientSecret: paymentIntentData!['client_secret'],
+            // applePay: PaymentSheetApplePay(merchantCountryCode: 'US'),
+            style: ThemeMode.dark,
+            merchantDisplayName: 'Nabeel Shehzad',
+          ))
+          .then((value) => {});
+      await displayPaymentSheet();
+    } catch (e) {
+      print("Stripe Exception: ${e.toString()}");
+    }
+  }
+
+  displayPaymentSheet() async {
+    try {
+      await Stripe.instance
+          .presentPaymentSheet(
+              //       parameters: PresentPaymentSheetParameters(
+              // clientSecret: paymentIntentData!['client_secret'],
+              // confirmPayment: true,
+              // )
+              )
+          .then((newValue) async {
+        paymentIntentData = null;
+      }).onError((error, stackTrace) {
+        print('Exception/DISPLAYPAYMENTSHEET==> $error $stackTrace');
+        showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text('Payment Failed'),
+                content: Text('Reason: $error'),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text('Ok'),
+                  ),
+                ],
+              );
+            });
+      });
+    } on StripeException catch (e) {
+      print('Exception/DISPLAYPAYMENTSHEET==> $e');
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Payment Failed'),
+            content: Text('Reason: $e'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('Ok'),
+              ),
+            ],
+          );
+        },
+      );
+    } catch (e) {
+      print('$e');
+    }
+  }
+
+  createPaymentIntent(String amount, String currency) async {
+    try {
+      Map<String, dynamic> body = {
+        'amount': calculatePayment(amount),
+        'currency': currency,
+        'payment_method_types[]': 'card'
+      };
+
+      var response = await http.post(
+          Uri.parse('https://api.stripe.com/v1/payment_intents'),
+          body: body,
+          headers: {
+            'Authorization':
+                'Bearer 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',
+            'Content-Type': 'application/x-www-form-urlencoded'
+          });
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      print("Stripe Exception: ${e.toString()}");
+    }
+  }
+
+  calculatePayment(String amount) {
+    final price = int.parse(amount) * 100;
+    return price.toString();
   }
 }

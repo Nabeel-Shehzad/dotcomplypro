@@ -263,6 +263,21 @@ class _RegisterState extends State<Register> {
                         },
                         child: Text('Register').text.size(20).make()),
                   ),
+                  Container(
+                    height: 15,
+                  ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () {
+                       Navigator.pop(context);
+                      },
+                      child: Text('Already have an account ? Login here...'),
+                    ),
+                  ),
+                  Container(
+                    height: 15,
+                  ),
                 ],
               )),
         ),

@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:velocity_x/velocity_x.dart';
 import 'package:sn_progress_dialog/progress_dialog.dart';
 import 'package:http/http.dart' as http;
@@ -15,16 +18,19 @@ class UCR extends StatefulWidget {
 }
 
 class _UCRState extends State<UCR> {
-
   final _formKey = GlobalKey<FormState>();
+  Map<String, dynamic>? paymentIntentData;
   ProgressDialog? _progressDialog;
+
+  int price = 0;
 
   TextEditingController ucrDotNumber = TextEditingController();
   TextEditingController ucrDocketType = TextEditingController();
   TextEditingController ucrDocketNumber = TextEditingController();
   TextEditingController ucrEIN = TextEditingController();
+  TextEditingController vehivles = TextEditingController();
 
-  Future<void> _uploadData(BuildContext context) async{
+  Future<void> _uploadData(BuildContext context) async {
     _progressDialog = ProgressDialog(context: context);
     _progressDialog!.show(
       max: 100,
@@ -37,6 +43,7 @@ class _UCRState extends State<UCR> {
     String docketType = ucrDocketType.text;
     String docketNumber = ucrDocketNumber.text;
     String ein = ucrEIN.text;
+    String vehicles = vehivles.text;
 
     var request = http.MultipartRequest('POST', Uri.parse(Links.ucr));
     request.fields['user_id'] = userId;
@@ -44,10 +51,11 @@ class _UCRState extends State<UCR> {
     request.fields['docket_type'] = docketType;
     request.fields['docket_number'] = docketNumber;
     request.fields['ein_number'] = ein;
+    request.fields['vehicles'] = vehicles;
 
     var response = await request.send();
 
-    if(response.statusCode == 200){
+    if (response.statusCode == 200) {
       //clear fields
       ucrDotNumber.clear();
       ucrDocketType.clear();
@@ -64,8 +72,7 @@ class _UCRState extends State<UCR> {
           ),
         );
       });
-    }
-    else{
+    } else {
       _progressDialog!.close();
       Future.microtask(() {
         showDialog(
@@ -77,7 +84,6 @@ class _UCRState extends State<UCR> {
         );
       });
     }
-
   }
 
   @override
@@ -203,18 +209,55 @@ class _UCRState extends State<UCR> {
               height: 15,
             ),
             Container(
+              width: double.maxFinite,
+              child: TextFormField(
+                keyboardType: TextInputType.number,
+                controller: vehivles,
+                style: TextStyle(fontSize: 16),
+                onChanged: (value) {
+                  setState(() {
+                    if (int.parse(value) == 0) {
+                      price = 0;
+                    } else if (int.parse(value) > 0 && int.parse(value) < 3) {
+                      price = 149;
+                    } else if (int.parse(value) > 2 && int.parse(value) < 6) {
+                      price = 289;
+                    } else if (int.parse(value) > 5) {
+                      price = 549;
+                    }
+                  });
+                },
+                decoration: InputDecoration(
+                  labelText: "Enter Number of vehicles",
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ),
+                validator: (value) {
+                  if (value!.isEmpty) {
+                    return 'Please enter No Of Vehicles';
+                  }
+                  return null;
+                },
+              ),
+            ),
+            Container(
               height: 15,
             ),
             Container(
               height: 50,
               width: double.maxFinite,
               child: ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     if (_formKey.currentState!.validate()) {
-                      _uploadData(context);
+                      if (price > 0) {
+                        await makePayment(price.toString());
+                      } else {
+                        _uploadData(context);
+                      }
                     }
                   },
-                  child: Text('Submit Form').text.size(20).make()),
+                  child: Text('Purchase Now \$$price').text.size(20).make()),
             ),
             Container(
               height: 15,
@@ -223,5 +266,106 @@ class _UCRState extends State<UCR> {
         ).p8(),
       ),
     );
+  }
+
+  Future<void> makePayment(String payment) async {
+    try {
+      paymentIntentData = await createPaymentIntent(payment, 'USD');
+      await Stripe.instance
+          .initPaymentSheet(
+              paymentSheetParameters: SetupPaymentSheetParameters(
+            paymentIntentClientSecret: paymentIntentData!['client_secret'],
+            // applePay: PaymentSheetApplePay(merchantCountryCode: 'US'),
+            style: ThemeMode.dark,
+            merchantDisplayName: 'Nabeel Shehzad',
+          ))
+          .then((value) => {});
+      await displayPaymentSheet();
+    } catch (e) {
+      print("Stripe Exception: ${e.toString()}");
+    }
+  }
+
+  displayPaymentSheet() async {
+    try {
+      await Stripe.instance
+          .presentPaymentSheet(
+              //       parameters: PresentPaymentSheetParameters(
+              // clientSecret: paymentIntentData!['client_secret'],
+              // confirmPayment: true,
+              // )
+              )
+          .then((newValue) async {
+        _uploadData(context);
+        paymentIntentData = null;
+      }).onError((error, stackTrace) {
+        print('Exception/DISPLAYPAYMENTSHEET==> $error $stackTrace');
+        showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text('Payment Failed'),
+                content: Text('Reason: $error'),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text('Ok'),
+                  ),
+                ],
+              );
+            });
+      });
+    } on StripeException catch (e) {
+      print('Exception/DISPLAYPAYMENTSHEET==> $e');
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Payment Failed'),
+            content: Text('Reason: $e'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text('Ok'),
+              ),
+            ],
+          );
+        },
+      );
+    } catch (e) {
+      print('$e');
+    }
+  }
+
+  createPaymentIntent(String amount, String currency) async {
+    try {
+      Map<String, dynamic> body = {
+        'amount': calculatePayment(amount),
+        'currency': currency,
+        'payment_method_types[]': 'card'
+      };
+
+      var response = await http.post(
+          Uri.parse('https://api.stripe.com/v1/payment_intents'),
+          body: body,
+          headers: {
+            'Authorization':
+                'Bearer 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',
+            'Content-Type': 'application/x-www-form-urlencoded'
+          });
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      print("Stripe Exception: ${e.toString()}");
+    }
+  }
+
+  calculatePayment(String amount) {
+    final price = int.parse(amount) * 100;
+    return price.toString();
   }
 }

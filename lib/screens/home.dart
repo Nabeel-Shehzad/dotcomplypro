@@ -41,6 +41,10 @@ class _HomeState extends State<Home> {
   static List<Widget> _widgetOptions = <Widget>[
     Driver(),
     Vehicle(),
+    BOC(),
+    ECA(),
+    UCR(),
+    Drug(),
   ];
   static List<GButton> tabs = [
     GButton(
@@ -50,6 +54,22 @@ class _HomeState extends State<Home> {
     GButton(
       icon: LineIcons.truck,
       text: 'Vehicle',
+    ),
+    GButton(
+      icon: LineIcons.blogger,
+      text: 'BOC',
+    ),
+    GButton(
+      icon: LineIcons.erlang,
+      text: 'ECA',
+    ),
+    GButton(
+      icon: LineIcons.uniregistry,
+      text: 'UCR',
+    ),
+    GButton(
+      icon: LineIcons.flask,
+      text: 'Drug',
     ),
   ];
 
@@ -239,7 +259,7 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
-    checkIfPaymentDone(User.uid);
+    //checkIfPaymentDone(User.uid);
     getDocument();
   }
 
@@ -276,26 +296,19 @@ class _HomeState extends State<Home> {
                     child: Text('Driver Form'),
                   ),
                 ),
-                PopupMenuItem(
-                  child: TextButton(
-                    onPressed: () {
-                      if (_widgetOptions.length == 6) {
-                        //show message that all the payments are cleared
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('All the payments are cleared')));
-                      } else {
-                        Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => Payment(
-                                      flag: true,
-                                    )));
-                      }
-                    },
-                    child: Text('Pending Payment'),
-                  ),
-                ),
+                // PopupMenuItem(
+                //   child: TextButton(
+                //     onPressed: () {
+                //       Navigator.pushReplacement(
+                //           context,
+                //           MaterialPageRoute(
+                //               builder: (context) => Payment(
+                //                     flag: true,
+                //                   )));
+                //     },
+                //     child: Text('Pending Payment'),
+                //   ),
+                // ),
                 PopupMenuItem(
                   child: TextButton(
                     onPressed: () async {
