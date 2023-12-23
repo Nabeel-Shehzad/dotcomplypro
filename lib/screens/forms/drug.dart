@@ -90,7 +90,6 @@ class _DrugState extends State<Drug> {
           _files = List.generate(6, (_) => File(''));
           _controllers = List.generate(6, (_) => TextEditingController());
         });
-
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -137,7 +136,7 @@ class _DrugState extends State<Drug> {
                 controller: _controllers[0],
                 style: TextStyle(fontSize: 16),
                 decoration: InputDecoration(
-                  labelText: "Select Maintenance Records",
+                  labelText: "Select Letter of Participation",
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10.0),
                   ),

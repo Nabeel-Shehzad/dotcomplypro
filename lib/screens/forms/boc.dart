@@ -157,12 +157,6 @@ class _BOCState extends State<BOC> {
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please enter DBA';
-                  }
-                  return null;
-                },
               ),
             ),
             Container(

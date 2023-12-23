@@ -35,8 +35,13 @@ class _HomeState extends State<Home> {
   String ucrDocLink = '';
   String ucrDocName = '';
 
+  String userDrugLink = '';
+  String userDrugName = '';
+
   bool isBocAvailable = false;
   bool isUcrAvailable = false;
+  bool isDrugAvailable = false;
+
   ProgressDialog? _progressDialog;
   static List<Widget> _widgetOptions = <Widget>[
     Driver(),
@@ -146,6 +151,32 @@ class _HomeState extends State<Home> {
     return null;
   }
 
+  Future<Map<String, dynamic>?> getDrugDoc() async {
+    final apiUrl = Links.get_drug_doc;
+
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        body: {'user_id': User.uid},
+      );
+
+      if (response.statusCode == 200) {
+        final driverData = json.decode(response.body);
+        return driverData;
+      } else {
+        if (kDebugMode) {
+          print(
+              'Failed to fetch Drug details. Status code: ${response.statusCode}');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error occurred while fetching Drug details: $e');
+      }
+    }
+    return null;
+  }
+
   Future<Map<String, dynamic>?> getUCRDoc() async {
     final apiUrl = Links.get_ucr_doc;
 
@@ -183,6 +214,18 @@ class _HomeState extends State<Home> {
         });
       }
     });
+    getDrugDoc().then((value) => {
+          if (value != null)
+            {
+              setState(() {
+                userDrugName = value['document_name'];
+                userDrugLink = value['location'] + value['document_name'];
+                userDrugLink =
+                    'https://dotcomplypro.com/MobileScripts/$userDrugLink';
+                isDrugAvailable = true;
+              })
+            }
+        });
     getUCRDoc().then((value) {
       if (value != null) {
         setState(() {
@@ -296,19 +339,6 @@ class _HomeState extends State<Home> {
                     child: Text('Driver Form'),
                   ),
                 ),
-                // PopupMenuItem(
-                //   child: TextButton(
-                //     onPressed: () {
-                //       Navigator.pushReplacement(
-                //           context,
-                //           MaterialPageRoute(
-                //               builder: (context) => Payment(
-                //                     flag: true,
-                //                   )));
-                //     },
-                //     child: Text('Pending Payment'),
-                //   ),
-                // ),
                 PopupMenuItem(
                   child: TextButton(
                     onPressed: () async {
@@ -323,6 +353,21 @@ class _HomeState extends State<Home> {
                       }
                     },
                     child: Text('Download BOC-3'),
+                  ),
+                ),
+                PopupMenuItem(
+                  child: TextButton(
+                    onPressed: () async {
+                      if (isDrugAvailable) {
+                        await _pickDirectory();
+                        await _saveFileToDirectory(userDrugLink, userDrugName);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                            content: Text(
+                                'Drug & Alcohol document not Available yet')));
+                      }
+                    },
+                    child: Text('Download Drug & Alcohol'),
                   ),
                 ),
                 PopupMenuItem(

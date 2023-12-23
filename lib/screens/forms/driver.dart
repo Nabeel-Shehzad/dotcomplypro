@@ -2,9 +2,10 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:material_tag_editor/tag_editor.dart';
 import 'package:show_platform_date_picker/show_platform_date_picker.dart';
-import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import 'package:velocity_x/velocity_x.dart';
 import 'package:sn_progress_dialog/progress_dialog.dart';
 import 'package:http/http.dart' as http;
@@ -24,7 +25,6 @@ class Driver extends StatefulWidget {
 
 class _DriverState extends State<Driver> {
   final _formkey = GlobalKey<FormState>();
-  PhoneNumber? phoneNumber;
   DateTime selectedDate = DateTime.now();
 
   TextEditingController driverNameController = TextEditingController();
@@ -66,6 +66,17 @@ class _DriverState extends State<Driver> {
 
   ProgressDialog? _progressDialog;
 
+  //tags fields
+  List<String> _values = [];
+  final FocusNode _focusNode = FocusNode();
+  final TextEditingController _textEditingController = TextEditingController();
+
+  _onDelete(index) {
+    setState(() {
+      _values.removeAt(index);
+    });
+  }
+
   Future<File> createEmptyPdf() async {
     final pdf = pdfLib.Document();
 
@@ -85,7 +96,6 @@ class _DriverState extends State<Driver> {
     final file = File('example.pdf');
     await file.writeAsBytes(await pdf.save());
     return file;
-
   }
 
   Future<void> _uploadData(BuildContext c) async {
@@ -103,9 +113,7 @@ class _DriverState extends State<Driver> {
     String driverAddress = driverAddressController.text;
     String driverDateOfBirth = driverDateOfBirthController.text;
     String driverSSN = driverSSNController.text;
-    String country = phoneNumber!.dialCode!;
-    String phoneDigits = phoneNumber!.phoneNumber!;
-    String driverPhone = phoneDigits;
+    String driverPhone = driverPhoneNumberController.text;
     String driverLicense = driverLicenseController.text;
     String driverLicenseState = driverLicenseStateController.text;
     String driverLicenseExpiryDate = driverLicenseExpiryDateController.text;
@@ -144,7 +152,6 @@ class _DriverState extends State<Driver> {
     request.fields['miscellaneous'] = miscellaneous;
     request.fields['date_terminated'] = driverDateTerminated;
 
-
     // Add file names to the request
     request.fields['annual_review_record'] =
         File(driverAnnualDrivingRecordController.text).path.split('/').last;
@@ -160,7 +167,7 @@ class _DriverState extends State<Driver> {
         File(driverPersonnelMattersController.text).path.split('/').last;
 
     // Add files to the request
-    if(driverAnnualDrivingRecordController.text.isNotEmpty){
+    if (driverAnnualDrivingRecordController.text.isNotEmpty) {
       request.files.add(
         await http.MultipartFile.fromPath(
           'annual_review_record',
@@ -168,7 +175,7 @@ class _DriverState extends State<Driver> {
         ),
       );
     }
-    if(driverCopyOfCDLController.text.isNotEmpty){
+    if (driverCopyOfCDLController.text.isNotEmpty) {
       request.files.add(
         await http.MultipartFile.fromPath(
           'driver_lic',
@@ -176,7 +183,7 @@ class _DriverState extends State<Driver> {
         ),
       );
     }
-    if(driverDrugScreenController.text.isNotEmpty){
+    if (driverDrugScreenController.text.isNotEmpty) {
       request.files.add(
         await http.MultipartFile.fromPath(
           'drug_screen',
@@ -184,7 +191,7 @@ class _DriverState extends State<Driver> {
         ),
       );
     }
-    if(driverMedicalExamController.text.isNotEmpty){
+    if (driverMedicalExamController.text.isNotEmpty) {
       request.files.add(
         await http.MultipartFile.fromPath(
           'medical_exam',
@@ -192,7 +199,7 @@ class _DriverState extends State<Driver> {
         ),
       );
     }
-    if(driverEmploymentApplicationController.text.isNotEmpty){
+    if (driverEmploymentApplicationController.text.isNotEmpty) {
       request.files.add(
         await http.MultipartFile.fromPath(
           'employment_application',
@@ -200,7 +207,7 @@ class _DriverState extends State<Driver> {
         ),
       );
     }
-    if(driverPersonnelMattersController.text.isNotEmpty){
+    if (driverPersonnelMattersController.text.isNotEmpty) {
       request.files.add(
         await http.MultipartFile.fromPath(
           'personnel_matters',
@@ -253,6 +260,43 @@ class _DriverState extends State<Driver> {
             Text(
               'Driver Files',
               style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+            ),
+            Container(
+              child: TagEditor(
+                length: _values.length,
+                controller: _textEditingController,
+                focusNode: _focusNode,
+                delimiters: [',', ' '],
+                hasAddButton: true,
+                resetTextOnSubmitted: true,
+                textStyle: TextStyle(fontSize: 16),
+                onSubmitted: (outstandingValue) {
+                  setState(() {
+                    _values.add(outstandingValue);
+                  });
+                },
+                inputDecoration: InputDecoration(
+                  border: InputBorder.none,
+                  hintText: 'Add Driver Names...',
+                ),
+                onTagChanged: (newValue) {
+                  setState(() {
+                    _values.add(newValue);
+                  });
+                },
+                tagBuilder: (context, index) => _Chip(
+                  index: index,
+                  label: _values[index],
+                  onDeleted: _onDelete,
+                ),
+                // InputFormatters example, this disallow \ and /
+                inputFormatters: [
+                  FilteringTextInputFormatter.deny(RegExp(r'[/\\]'))
+                ],
+              ),
+            ),
+            Container(
+              height: 15,
             ),
             Container(
               width: double.maxFinite,
@@ -393,16 +437,19 @@ class _DriverState extends State<Driver> {
             ),
             Container(
               width: double.maxFinite,
-              child: InternationalPhoneNumberInput(
-                onInputChanged: (PhoneNumber number) {
-                  phoneNumber = number;
-                },
-                textFieldController: driverPhoneNumberController,
-                initialValue: PhoneNumber(isoCode: 'US'),
-                formatInput: true,
+              child: TextFormField(
+                style: TextStyle(fontSize: 16),
+                controller: driverPhoneNumberController,
+                keyboardType: TextInputType.phone,
+                decoration: InputDecoration(
+                  labelText: 'Phone Number',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ),
                 validator: (value) {
                   if (value!.isEmpty) {
-                    return 'Please enter your phone number';
+                    return 'Please enter your Phone Number';
                   }
                   return null;
                 },
@@ -491,7 +538,7 @@ class _DriverState extends State<Driver> {
                   if (result != null && result.files.isNotEmpty) {
                     driverAnnualDrivingRecordController.text =
                         result.files.first.path!;
-                  }else{
+                  } else {
                     driverAnnualDrivingRecordController.text = "";
                   }
                 },
@@ -548,8 +595,7 @@ class _DriverState extends State<Driver> {
                       await FilePicker.platform.pickFiles();
                   if (result != null && result.files.isNotEmpty) {
                     driverCopyOfCDLController.text = result.files.first.path!;
-                  }
-                  else{
+                  } else {
                     driverCopyOfCDLController.text = "";
                   }
                 },
@@ -695,7 +741,7 @@ class _DriverState extends State<Driver> {
                       await FilePicker.platform.pickFiles();
                   if (result != null && result.files.isNotEmpty) {
                     driverDrugScreenController.text = result.files.first.path!;
-                  }else{
+                  } else {
                     driverDrugScreenController.text = "";
                   }
                 },
@@ -721,7 +767,7 @@ class _DriverState extends State<Driver> {
                       await FilePicker.platform.pickFiles();
                   if (result != null && result.files.isNotEmpty) {
                     driverMedicalExamController.text = result.files.first.path!;
-                  }else{
+                  } else {
                     driverMedicalExamController.text = "";
                   }
                 },
@@ -778,7 +824,7 @@ class _DriverState extends State<Driver> {
                   if (result != null && result.files.isNotEmpty) {
                     driverEmploymentApplicationController.text =
                         result.files.first.path!;
-                  }else{
+                  } else {
                     driverEmploymentApplicationController.text = "";
                   }
                 },
@@ -805,7 +851,7 @@ class _DriverState extends State<Driver> {
                   if (result != null && result.files.isNotEmpty) {
                     driverPersonnelMattersController.text =
                         result.files.first.path!;
-                  }else{
+                  } else {
                     driverPersonnelMattersController.text = "";
                   }
                 },
@@ -878,6 +924,36 @@ class _DriverState extends State<Driver> {
           ],
         ).p8(),
       ),
+    );
+  }
+}
+
+class _Chip extends StatelessWidget {
+  const _Chip({
+    required this.label,
+    required this.onDeleted,
+    required this.index,
+  });
+
+  final String label;
+  final ValueChanged<int> onDeleted;
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    return Chip(
+      labelPadding: const EdgeInsets.only(left: 8.0),
+      label: Text(label),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10.0),
+      ),
+      deleteIcon: const Icon(
+        Icons.close,
+        size: 18,
+      ),
+      onDeleted: () {
+        onDeleted(index);
+      },
     );
   }
 }

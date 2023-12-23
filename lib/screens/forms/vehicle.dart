@@ -463,12 +463,6 @@ class _VehicleState extends State<Vehicle> {
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please enter Miscellaneous Information';
-                  }
-                  return null;
-                },
               ),
             ),
             Container(
@@ -486,17 +480,13 @@ class _VehicleState extends State<Vehicle> {
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                 ),
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Please Choose Record';
-                  }
-                  return null;
-                },
                 onTap: () async {
                   FilePickerResult? result =
                       await FilePicker.platform.pickFiles();
                   if (result != null && result.files.isNotEmpty) {
                     vehicleMiscellaneousFiles.text = result.files.first.path!;
+                  } else{
+                    vehicleMiscellaneousFiles.text = '';
                   }
                 },
               ),

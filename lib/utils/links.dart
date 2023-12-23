@@ -17,5 +17,6 @@ class Links{
   static String get_payment = "https://dotcomplypro.com/MobileScripts/get_payment.php";
   static String get_boc_doc = "https://dotcomplypro.com/MobileScripts/get_boc_doc.php";
   static String get_ucr_doc = "https://dotcomplypro.com/MobileScripts/get_ucr_doc.php";
+  static String get_drug_doc = "https://dotcomplypro.com/MobileScripts/get_drug_doc.php";
   static String update_password = "https://dotcomplypro.com/MobileScripts/update_password.php";
 }
