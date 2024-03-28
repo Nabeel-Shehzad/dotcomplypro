@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:dotcomplypro/screens/card/success.dart';
 import 'package:dotcomplypro/utils/links.dart';
+import 'package:dotcomplypro/utils/rates.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
@@ -12,7 +14,8 @@ import 'package:velocity_x/velocity_x.dart';
 import 'package:mime/mime.dart';
 import '../../utils/custom_dialog.dart';
 import '../../utils/logged_in_user.dart';
-
+import 'package:mailer/mailer.dart' as mailer;
+import 'package:mailer/smtp_server/gmail.dart';
 class Drug extends StatefulWidget {
   const Drug({Key? key}) : super(key: key);
 
@@ -30,6 +33,25 @@ class _DrugState extends State<Drug> {
   int price = 0;
 
   List<TextEditingController> _controllers = [];
+
+  final gmailStmp = gmail(dotenv.env["GMAIL_EMAIL"]!, dotenv.env["GMAIL_PASSWORD"]!);
+  sendMailFromGmail()async{
+    final message = mailer.Message()
+      ..from = mailer.Address(dotenv.env["GMAIL_EMAIL"]!, 'DOT ComplyPro')
+      ..recipients.add('newsales@dot-comply.com')
+      ..subject = 'BOC-3 Filling :: 😀 :: ${DateTime.now()}'
+      ..text = 'The BOC-3 Product is purchased by User with ID: ${User.uid}';
+
+    try {
+      final sendReport = await mailer.send(message, gmailStmp);
+      print('Message sent: ' + sendReport.toString());
+    } on mailer.MailerException catch (e) {
+      print('Message not sent. $e');
+      for (var p in e.problems) {
+        print('Problem: ${p.code}: ${p.msg}');
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -113,6 +135,7 @@ class _DrugState extends State<Drug> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -129,7 +152,7 @@ class _DrugState extends State<Drug> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 readOnly: true,
@@ -155,7 +178,7 @@ class _DrugState extends State<Drug> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 readOnly: true,
@@ -181,7 +204,7 @@ class _DrugState extends State<Drug> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 readOnly: true,
@@ -207,7 +230,7 @@ class _DrugState extends State<Drug> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 readOnly: true,
@@ -233,7 +256,7 @@ class _DrugState extends State<Drug> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 readOnly: true,
@@ -259,7 +282,7 @@ class _DrugState extends State<Drug> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 readOnly: true,
@@ -285,7 +308,7 @@ class _DrugState extends State<Drug> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -303,9 +326,9 @@ class _DrugState extends State<Drug> {
                         setState(() {
                           drugTestValue = value!;
                           if (drugTestValue == true) {
-                            price = price + 224;
+                            price = price + Rates.rates['Pre-Employment Drug']!;
                           } else {
-                            price = price - 224;
+                            price = price - Rates.rates['Pre-Employment Drug']!;
                             if (price < 0) {
                               price = 0;
                             }
@@ -320,7 +343,7 @@ class _DrugState extends State<Drug> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -338,9 +361,9 @@ class _DrugState extends State<Drug> {
                         setState(() {
                           drugScreenValue = value!;
                           if (drugScreenValue == true) {
-                            price = price + 149;
+                            price = price + Rates.rates['No Pre-Employment Drug']!;
                           } else {
-                            price = price - 149;
+                            price = price - Rates.rates['No Pre-Employment Drug']!;
                             if (price < 0) {
                               price = 0;
                             }
@@ -355,7 +378,7 @@ class _DrugState extends State<Drug> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               height: 50,
               width: double.maxFinite,
               child: ElevatedButton(
@@ -406,6 +429,7 @@ class _DrugState extends State<Drug> {
               // )
               )
           .then((newValue) async {
+        sendMailFromGmail();
         paymentIntentData = null;
       }).onError((error, stackTrace) {
         print('Exception/DISPLAYPAYMENTSHEET==> $error $stackTrace');
@@ -452,10 +476,19 @@ class _DrugState extends State<Drug> {
 
   createPaymentIntent(String amount, String currency) async {
     try {
+      String items = '';
+      if (drugTestValue && drugScreenValue) {
+        items = 'Pre-Employment Drug Test & No Pre-Employment Drug Screen';
+      } else if (drugTestValue) {
+        items = 'Pre-Employment Drug Test';
+      } else if (drugScreenValue) {
+        items = 'No Pre-Employment Drug Screen';
+      }
       Map<String, dynamic> body = {
         'amount': calculatePayment(amount),
         'currency': currency,
-        'payment_method_types[]': 'card'
+        'payment_method_types[]': 'card',
+        'description': items,
       };
 
       var response = await http.post(

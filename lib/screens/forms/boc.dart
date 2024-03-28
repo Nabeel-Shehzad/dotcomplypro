@@ -1,11 +1,15 @@
 import 'dart:convert';
 
+import 'package:dotcomplypro/utils/rates.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:mailer/mailer.dart' as mailer;
+import 'package:mailer/smtp_server/gmail.dart';
 import 'package:sn_progress_dialog/progress_dialog.dart';
 import 'package:velocity_x/velocity_x.dart';
 import 'package:http/http.dart' as http;
-
+import 'package:mailer/smtp_server.dart';
 import '../../utils/custom_dialog.dart';
 import '../../utils/links.dart';
 import '../../utils/logged_in_user.dart';
@@ -26,6 +30,28 @@ class _BOCState extends State<BOC> {
   TextEditingController legalName = TextEditingController();
   TextEditingController dba = TextEditingController();
   TextEditingController state = TextEditingController();
+
+  String payment =
+      User.isBOCPaid ? 'Purchase Now - \$0.00' : 'Purchase Now - \$${Rates.rates['BOC3']}';
+
+  final gmailStmp = gmail(dotenv.env["GMAIL_EMAIL"]!, dotenv.env["GMAIL_PASSWORD"]!);
+  sendMailFromGmail()async{
+    final message = mailer.Message()
+      ..from = mailer.Address(dotenv.env["GMAIL_EMAIL"]!, 'DOT ComplyPro')
+      ..recipients.add('newsales@dot-comply.com')
+      ..subject = 'BOC-3 Filling :: 😀 :: ${DateTime.now()}'
+      ..text = 'The BOC-3 Product is purchased by User with ID: ${User.uid}';
+
+    try {
+      final sendReport = await mailer.send(message, gmailStmp);
+      print('Message sent: ' + sendReport.toString());
+    } on mailer.MailerException catch (e) {
+      print('Message not sent. $e');
+      for (var p in e.problems) {
+        print('Problem: ${p.code}: ${p.msg}');
+      }
+    }
+  }
 
   Future<void> _uploadData(BuildContext context) async {
     _progressDialog = ProgressDialog(context: context);
@@ -102,7 +128,7 @@ class _BOCState extends State<BOC> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 controller: dotNumber,
@@ -124,7 +150,7 @@ class _BOCState extends State<BOC> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 controller: legalName,
@@ -146,7 +172,7 @@ class _BOCState extends State<BOC> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 controller: dba,
@@ -162,7 +188,7 @@ class _BOCState extends State<BOC> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 controller: state,
@@ -184,16 +210,20 @@ class _BOCState extends State<BOC> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               height: 50,
               width: double.maxFinite,
               child: ElevatedButton(
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
-                      makePayment('39');
+                      if (User.isBOCPaid) {
+                        _uploadData(context);
+                      } else {
+                        makePayment(Rates.rates['BOC3'].toString());
+                      }
                     }
                   },
-                  child: Text('Purchase Now - \$39.00').text.size(20).make()),
+                  child: Text(payment).text.size(20).make()),
             ),
             Container(
               height: 15,
@@ -233,6 +263,7 @@ class _BOCState extends State<BOC> {
               )
           .then((newValue) async {
         await _uploadData(context);
+        sendMailFromGmail();
 
         paymentIntentData = null;
       }).onError((error, stackTrace) {
@@ -280,10 +311,13 @@ class _BOCState extends State<BOC> {
 
   createPaymentIntent(String amount, String currency) async {
     try {
+      //add items in body that user is buying
+      String items = 'BOC-3 Filling';
       Map<String, dynamic> body = {
         'amount': calculatePayment(amount),
         'currency': currency,
-        'payment_method_types[]': 'card'
+        'payment_method_types[]': 'card',
+        'description': items,
       };
 
       var response = await http.post(

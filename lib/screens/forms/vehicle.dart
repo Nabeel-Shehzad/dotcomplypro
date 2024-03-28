@@ -143,7 +143,7 @@ class _VehicleState extends State<Vehicle> {
             SizedBox(
               height: 20,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 controller: vehicleUnitNumber,
@@ -165,7 +165,7 @@ class _VehicleState extends State<Vehicle> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 controller: vehicleYear,
@@ -187,7 +187,7 @@ class _VehicleState extends State<Vehicle> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 controller: vehicleModel,
@@ -209,7 +209,7 @@ class _VehicleState extends State<Vehicle> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 controller: vehicleMake,
@@ -231,7 +231,7 @@ class _VehicleState extends State<Vehicle> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 controller: vehicleLicense,
@@ -253,7 +253,7 @@ class _VehicleState extends State<Vehicle> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 controller: vehicleVIN,
@@ -275,7 +275,7 @@ class _VehicleState extends State<Vehicle> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 controller: vehicleGVWR,
@@ -297,7 +297,7 @@ class _VehicleState extends State<Vehicle> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 readOnly: true,
@@ -333,7 +333,7 @@ class _VehicleState extends State<Vehicle> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 controller: vehicleMeterReading,
@@ -355,7 +355,7 @@ class _VehicleState extends State<Vehicle> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 readOnly: true,
@@ -391,7 +391,7 @@ class _VehicleState extends State<Vehicle> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 readOnly: true,
@@ -421,7 +421,7 @@ class _VehicleState extends State<Vehicle> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 readOnly: true,
@@ -451,7 +451,7 @@ class _VehicleState extends State<Vehicle> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 maxLines: 3,
@@ -468,7 +468,7 @@ class _VehicleState extends State<Vehicle> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 readOnly: true,
@@ -494,7 +494,7 @@ class _VehicleState extends State<Vehicle> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               height: 50,
               width: double.maxFinite,
               child: ElevatedButton(

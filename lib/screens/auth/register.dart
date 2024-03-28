@@ -7,7 +7,6 @@ import 'package:velocity_x/velocity_x.dart';
 import 'package:http/http.dart' as http;
 
 import '../../utils/links.dart';
-import 'login.dart';
 
 class Register extends StatefulWidget {
   const Register({super.key});
@@ -23,6 +22,8 @@ class _RegisterState extends State<Register> {
   File? licenseFrontImgFile;
   File? licenseBackImgFile;
   ProgressDialog? _progressDialog;
+  TextEditingController dotNumberController = TextEditingController();
+  TextEditingController companyNameController = TextEditingController();
   TextEditingController firstNameController = TextEditingController();
   TextEditingController lastNameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
@@ -32,8 +33,8 @@ class _RegisterState extends State<Register> {
 
   // Function to handle image selection
   Future<void> _selectImage(ImageSource source, bool isFrontImage) async {
-    ImagePicker _picker = ImagePicker();
-    final pickedImage = await _picker.pickImage(source: source);
+    ImagePicker picker = ImagePicker();
+    final pickedImage = await picker.pickImage(source: source);
     if (pickedImage != null) {
       File imageFile = File(pickedImage.path);
       setState(() {
@@ -58,11 +59,13 @@ class _RegisterState extends State<Register> {
       progressType: ProgressType.normal,
     );
 
-    var request = await http.MultipartRequest('POST',Uri.parse(Links.register));
+    var request = http.MultipartRequest('POST',Uri.parse(Links.register));
     request.fields['first_name'] = firstNameController.text;
     request.fields['last_name'] = lastNameController.text;
-    request.fields['email'] = emailController.text;
-    request.fields['password'] = passwordController.text;
+    request.fields['email'] = emailController.text.trim();
+    request.fields['password'] = passwordController.text.trim();
+    request.fields['dot_number'] = dotNumberController.text;
+    request.fields['company_name'] = companyNameController.text;
     // Upload the license front image
     if (licenseFrontImgFile != null) {
       request.fields['license_front_img'] = licenseFrontImgFile!.path.split('/').last;
@@ -93,7 +96,7 @@ class _RegisterState extends State<Register> {
         builder: (BuildContext context) {
           return AlertDialog(
             title: Text('Registration Failed'),
-            content: Text('Please try again later'),
+            content: Text('User Already Exists!'),
             actions: [
               TextButton(
                 child: Text('OK'),
@@ -123,7 +126,51 @@ class _RegisterState extends State<Register> {
                     height: 200,
                     child: Image.asset('assets/logo.png'),
                   ),
+                  SizedBox(
+                    width: double.maxFinite,
+                    child: TextFormField(
+                      controller: dotNumberController,
+                      style: TextStyle(fontSize: 16),
+                      decoration: InputDecoration(
+                        labelText: 'Enter DOT Number',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return 'Please choose your DOT Number';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
                   Container(
+                    height: 15,
+                  ),
+                  SizedBox(
+                    width: double.maxFinite,
+                    child: TextFormField(
+                      controller: companyNameController,
+                      style: TextStyle(fontSize: 16),
+                      decoration: InputDecoration(
+                        labelText: 'Company Name',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return 'Please enter your Company Name';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  Container(
+                    height: 15,
+                  ),
+                  SizedBox(
                     width: double.maxFinite,
                     child: TextFormField(
                       controller: firstNameController,
@@ -145,7 +192,7 @@ class _RegisterState extends State<Register> {
                   Container(
                     height: 15,
                   ),
-                  Container(
+                  SizedBox(
                     width: double.maxFinite,
                     child: TextFormField(
                       controller: lastNameController,
@@ -167,7 +214,7 @@ class _RegisterState extends State<Register> {
                   Container(
                     height: 15,
                   ),
-                  Container(
+                  SizedBox(
                     width: double.maxFinite,
                     child: TextFormField(
                       controller: emailController,
@@ -189,7 +236,7 @@ class _RegisterState extends State<Register> {
                   Container(
                     height: 15,
                   ),
-                  Container(
+                  SizedBox(
                     width: double.maxFinite,
                     child: TextFormField(
                       controller: passwordController,
@@ -218,6 +265,7 @@ class _RegisterState extends State<Register> {
                   Container(
                     height: 15,
                   ),
+
                   'Choose Driver License Front Image'.text.lg.make(),
                   InkWell(
                     onTap: () => _selectImage(ImageSource.gallery, true), // Open image picker on tap

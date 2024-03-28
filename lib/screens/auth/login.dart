@@ -2,8 +2,9 @@ import 'dart:convert';
 
 import 'package:dotcomplypro/screens/auth/register.dart';
 import 'package:dotcomplypro/screens/password/reset_password.dart';
-import 'package:dotcomplypro/screens/pay/payment.dart';
-import 'package:dotcomplypro/screens/pay/welcome.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:mailer/mailer.dart';
+import 'package:mailer/smtp_server.dart';
 
 import '../../utils/links.dart';
 import '../../utils/logged_in_user.dart';
@@ -33,6 +34,8 @@ class _LoginState extends State<Login> {
 
   NotificationServices notificationServices = NotificationServices();
 
+
+
   @override
   void initState() {
     super.initState();
@@ -58,12 +61,12 @@ class _LoginState extends State<Login> {
       progressType: ProgressType.normal,
     );
 
-    var response = await http.post(Uri.parse(Links.login), body: {
-      'email': emailController.text,
-      'password': passwordController.text,
-    });
-
     try {
+      var response = await http.post(Uri.parse(Links.login), body: {
+        'email': emailController.text.trim(),
+        'password': passwordController.text.trim(),
+      });
+
       if (response.body != 'failure') {
         User.uid = response.body;
         User.email = emailController.text;
@@ -80,8 +83,7 @@ class _LoginState extends State<Login> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) =>
-                Home(),
+            builder: (context) => Home(),
           ),
         );
       } else {
@@ -105,6 +107,7 @@ class _LoginState extends State<Login> {
         );
       }
     } catch (e) {
+      _progressDialog!.close();
       print('Error decoding JSON: $e');
     }
   }
@@ -166,7 +169,7 @@ class _LoginState extends State<Login> {
                     height: 200,
                     child: Image.asset('assets/logo.png'),
                   ),
-                  Container(
+                  SizedBox(
                     width: double.maxFinite,
                     child: TextFormField(
                       controller: emailController,
@@ -188,7 +191,7 @@ class _LoginState extends State<Login> {
                   Container(
                     height: 15,
                   ),
-                  Container(
+                  SizedBox(
                     width: double.maxFinite,
                     child: TextFormField(
                       controller: passwordController,
@@ -221,7 +224,7 @@ class _LoginState extends State<Login> {
                     height: 50,
                     width: double.maxFinite,
                     child: ElevatedButton(
-                        onPressed: () {
+                        onPressed: () async {
                           if (_formkey.currentState!.validate()) {
                             _login();
                           }

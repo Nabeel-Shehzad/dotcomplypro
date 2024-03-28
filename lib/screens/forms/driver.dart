@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:material_tag_editor/tag_editor.dart';
 import 'package:show_platform_date_picker/show_platform_date_picker.dart';
 import 'package:velocity_x/velocity_x.dart';
@@ -67,7 +66,7 @@ class _DriverState extends State<Driver> {
   ProgressDialog? _progressDialog;
 
   //tags fields
-  List<String> _values = [];
+  final List<String> _values = [];
   final FocusNode _focusNode = FocusNode();
   final TextEditingController _textEditingController = TextEditingController();
 
@@ -106,9 +105,12 @@ class _DriverState extends State<Driver> {
       progressType: ProgressType.normal,
     );
 
+
+
     String userId = User.uid;
     String driverName = driverNameController.text;
     String driverLastName = driverLastNameController.text;
+    String drivers = _values.join(',');
     String driverHireDate = driverHireDateController.text;
     String driverAddress = driverAddressController.text;
     String driverDateOfBirth = driverDateOfBirthController.text;
@@ -134,6 +136,7 @@ class _DriverState extends State<Driver> {
     request.fields['user_id'] = userId;
     request.fields['first_name'] = driverName;
     request.fields['last_name'] = driverLastName;
+    request.fields['drivers'] = drivers;
     request.fields['date_hired'] = driverHireDate;
     request.fields['address'] = driverAddress;
     request.fields['date_of_birth'] = driverDateOfBirth;
@@ -298,7 +301,7 @@ class _DriverState extends State<Driver> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 controller: driverNameController,
@@ -320,7 +323,7 @@ class _DriverState extends State<Driver> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 controller: driverLastNameController,
@@ -342,7 +345,7 @@ class _DriverState extends State<Driver> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 readOnly: true,
@@ -372,7 +375,7 @@ class _DriverState extends State<Driver> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 maxLines: 3,
@@ -389,7 +392,7 @@ class _DriverState extends State<Driver> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 readOnly: true,
@@ -419,7 +422,7 @@ class _DriverState extends State<Driver> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 style: TextStyle(fontSize: 16),
@@ -435,7 +438,7 @@ class _DriverState extends State<Driver> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 style: TextStyle(fontSize: 16),
@@ -458,7 +461,7 @@ class _DriverState extends State<Driver> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 style: TextStyle(fontSize: 16),
@@ -474,7 +477,7 @@ class _DriverState extends State<Driver> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 style: TextStyle(fontSize: 16),
@@ -490,7 +493,7 @@ class _DriverState extends State<Driver> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 readOnly: true,
@@ -520,7 +523,7 @@ class _DriverState extends State<Driver> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 readOnly: true,
@@ -547,7 +550,7 @@ class _DriverState extends State<Driver> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 readOnly: true,
@@ -578,7 +581,7 @@ class _DriverState extends State<Driver> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 readOnly: true,
@@ -604,7 +607,7 @@ class _DriverState extends State<Driver> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: DropdownButtonFormField(
                 onChanged: (value) {
@@ -634,7 +637,7 @@ class _DriverState extends State<Driver> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 readOnly: true,
@@ -664,7 +667,7 @@ class _DriverState extends State<Driver> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 readOnly: true,
@@ -694,7 +697,7 @@ class _DriverState extends State<Driver> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 readOnly: true,
@@ -724,7 +727,7 @@ class _DriverState extends State<Driver> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 readOnly: true,
@@ -750,7 +753,7 @@ class _DriverState extends State<Driver> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 readOnly: true,
@@ -776,7 +779,7 @@ class _DriverState extends State<Driver> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 readOnly: true,
@@ -806,7 +809,7 @@ class _DriverState extends State<Driver> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 readOnly: true,
@@ -833,7 +836,7 @@ class _DriverState extends State<Driver> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 readOnly: true,
@@ -860,7 +863,7 @@ class _DriverState extends State<Driver> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 maxLines: 3,
@@ -877,7 +880,7 @@ class _DriverState extends State<Driver> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 readOnly: true,
@@ -907,7 +910,7 @@ class _DriverState extends State<Driver> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               height: 50,
               width: double.maxFinite,
               child: ElevatedButton(

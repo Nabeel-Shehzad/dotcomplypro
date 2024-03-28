@@ -1,7 +1,10 @@
 import 'dart:convert';
 
+import 'package:dotcomplypro/utils/rates.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:mailer/smtp_server/gmail.dart';
 import 'package:velocity_x/velocity_x.dart';
 import 'package:sn_progress_dialog/progress_dialog.dart';
 import 'package:http/http.dart' as http;
@@ -9,7 +12,8 @@ import 'package:http/http.dart' as http;
 import '../../utils/custom_dialog.dart';
 import '../../utils/links.dart';
 import '../../utils/logged_in_user.dart';
-
+import 'package:http/http.dart' as http;
+import 'package:mailer/mailer.dart' as mailer;
 class UCR extends StatefulWidget {
   const UCR({Key? key}) : super(key: key);
 
@@ -28,7 +32,26 @@ class _UCRState extends State<UCR> {
   TextEditingController ucrDocketType = TextEditingController();
   TextEditingController ucrDocketNumber = TextEditingController();
   TextEditingController ucrEIN = TextEditingController();
-  TextEditingController vehivles = TextEditingController();
+  TextEditingController vehivles = TextEditingController(text: '0');
+
+  final gmailStmp = gmail(dotenv.env["GMAIL_EMAIL"]!, dotenv.env["GMAIL_PASSWORD"]!);
+  sendMailFromGmail()async{
+    final message = mailer.Message()
+      ..from = mailer.Address(dotenv.env["GMAIL_EMAIL"]!, 'DOT ComplyPro')
+      ..recipients.add('newsales@dot-comply.com')
+      ..subject = 'BOC-3 Filling :: 😀 :: ${DateTime.now()}'
+      ..text = 'The BOC-3 Product is purchased by User with ID: ${User.uid}';
+
+    try {
+      final sendReport = await mailer.send(message, gmailStmp);
+      print('Message sent: ' + sendReport.toString());
+    } on mailer.MailerException catch (e) {
+      print('Message not sent. $e');
+      for (var p in e.problems) {
+        print('Problem: ${p.code}: ${p.msg}');
+      }
+    }
+  }
 
   Future<void> _uploadData(BuildContext context) async {
     _progressDialog = ProgressDialog(context: context);
@@ -102,7 +125,7 @@ class _UCRState extends State<UCR> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 controller: ucrDotNumber,
@@ -124,7 +147,7 @@ class _UCRState extends State<UCR> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: DropdownButtonFormField(
                 onChanged: (value) {
@@ -164,7 +187,7 @@ class _UCRState extends State<UCR> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 controller: ucrDocketNumber,
@@ -186,7 +209,7 @@ class _UCRState extends State<UCR> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 controller: ucrEIN,
@@ -208,7 +231,7 @@ class _UCRState extends State<UCR> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               width: double.maxFinite,
               child: TextFormField(
                 keyboardType: TextInputType.number,
@@ -219,11 +242,11 @@ class _UCRState extends State<UCR> {
                     if (int.parse(value) == 0) {
                       price = 0;
                     } else if (int.parse(value) > 0 && int.parse(value) < 3) {
-                      price = 149;
+                      price = Rates.rates['UCR (Range 1-2)']!;
                     } else if (int.parse(value) > 2 && int.parse(value) < 6) {
-                      price = 289;
+                      price = Rates.rates['UCR (Range 3-5)']!;
                     } else if (int.parse(value) > 5) {
-                      price = 549;
+                      price = Rates.rates['UCR (Range 5+)']!;
                     }
                   });
                 },
@@ -244,7 +267,7 @@ class _UCRState extends State<UCR> {
             Container(
               height: 15,
             ),
-            Container(
+            SizedBox(
               height: 50,
               width: double.maxFinite,
               child: ElevatedButton(
@@ -297,6 +320,7 @@ class _UCRState extends State<UCR> {
               )
           .then((newValue) async {
         _uploadData(context);
+        sendMailFromGmail();
         paymentIntentData = null;
       }).onError((error, stackTrace) {
         print('Exception/DISPLAYPAYMENTSHEET==> $error $stackTrace');
@@ -343,10 +367,13 @@ class _UCRState extends State<UCR> {
 
   createPaymentIntent(String amount, String currency) async {
     try {
+      //add items in body that user is buying
+      String items = 'UCR Registration';
       Map<String, dynamic> body = {
         'amount': calculatePayment(amount),
         'currency': currency,
-        'payment_method_types[]': 'card'
+        'payment_method_types[]': 'card',
+        'description': items,
       };
 
       var response = await http.post(

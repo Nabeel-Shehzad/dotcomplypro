@@ -12,7 +12,7 @@ import '../home.dart';
 class Payment extends StatefulWidget {
   final bool flag;
 
-  Payment({required this.flag, super.key});
+  const Payment({required this.flag, super.key});
 
   @override
   State<Payment> createState() => _PaymentState();

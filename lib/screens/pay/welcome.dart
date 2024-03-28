@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:velocity_x/velocity_x.dart';
 
 class Welcome extends StatelessWidget {
+  const Welcome({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,7 +39,7 @@ class Welcome extends StatelessWidget {
                 style: TextStyle(fontSize: 16),
               ),
               SizedBox(height: 32),
-              Container(
+              SizedBox(
                 width: double.maxFinite,
                 child: ElevatedButton.icon(
                   onPressed: () {

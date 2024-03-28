@@ -18,7 +18,7 @@ class Otp extends StatelessWidget {
       child: TextFormField(
         controller: otpController,
         keyboardType: TextInputType.number,
-        style: Theme.of(context).textTheme.headline6,
+        style: Theme.of(context).textTheme.titleLarge,
         textAlign: TextAlign.center,
         inputFormatters: [
           LengthLimitingTextInputFormatter(1),

@@ -1,16 +1,18 @@
 import 'dart:convert';
 
+import 'package:dotcomplypro/screens/info/message.dart';
+import 'package:dotcomplypro/screens/info/vehicle_info.dart';
 import 'package:dotcomplypro/screens/notifications/notifications.dart';
-import 'package:dotcomplypro/screens/pay/payment.dart';
+import 'package:dotcomplypro/screens/policy/privacy_policy.dart';
 import 'package:dotcomplypro/utils/logged_in_user.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
-import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:line_icons/line_icons.dart';
 import 'package:sn_progress_dialog/progress_dialog.dart';
 
 import '../utils/links.dart';
+import '../utils/rates.dart';
 import 'forms/boc.dart';
 import 'forms/driver.dart';
 import 'forms/drug.dart';
@@ -43,40 +45,26 @@ class _HomeState extends State<Home> {
   bool isDrugAvailable = false;
 
   ProgressDialog? _progressDialog;
-  static List<Widget> _widgetOptions = <Widget>[
+  static final List<Widget> _widgetOptions = <Widget>[
     Driver(),
     Vehicle(),
     BOC(),
     ECA(),
     UCR(),
     Drug(),
-  ];
-  static List<GButton> tabs = [
-    GButton(
-      icon: LineIcons.user,
-      text: 'Driver',
-    ),
-    GButton(
-      icon: LineIcons.truck,
-      text: 'Vehicle',
-    ),
-    GButton(
-      icon: LineIcons.blogger,
-      text: 'BOC',
-    ),
-    GButton(
-      icon: LineIcons.erlang,
-      text: 'ECA',
-    ),
-    GButton(
-      icon: LineIcons.uniregistry,
-      text: 'UCR',
-    ),
-    GButton(
-      icon: LineIcons.flask,
-      text: 'Drug',
+    DriverInfo(),
+    VehicleInfo(),
+    PrivacyPolicy(
+      flag: true,
     ),
   ];
+
+  void _onMenuItemSelected(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    Navigator.of(context).pop(); // Close the drawer
+  }
 
   Future<void> checkIfPaymentDone(String? uid) async {
     final response = await http.post(Uri.parse(Links.get_payment), body: {
@@ -84,44 +72,14 @@ class _HomeState extends State<Home> {
     });
 
     if (response.body != 'failure') {
-      //split response body on ,
       List<String> paymentDetails = response.body.split(',');
       if (paymentDetails[0] == 'Yes') {
         setState(() {
-          _widgetOptions.add(BOC());
-          tabs.add(GButton(
-            icon: LineIcons.blogger,
-            text: 'BOC',
-          ));
+          User.isBOCPaid = true;
         });
       }
-      if (paymentDetails[1] == 'Yes') {
-        setState(() {
-          _widgetOptions.add(ECA());
-          tabs.add(GButton(
-            icon: LineIcons.erlang,
-            text: 'ECA',
-          ));
-        });
-      }
-      if (paymentDetails[2] == 'Yes') {
-        setState(() {
-          _widgetOptions.add(UCR());
-          tabs.add(GButton(
-            icon: LineIcons.uniregistry,
-            text: 'UCR',
-          ));
-        });
-      }
-      if (paymentDetails[3] == 'Yes') {
-        setState(() {
-          _widgetOptions.add(Drug());
-          tabs.add(GButton(
-            icon: LineIcons.flask,
-            text: 'Drug',
-          ));
-        });
-      }
+      if (paymentDetails[1] == 'Yes') {}
+      if (paymentDetails[3] == 'Yes') {}
     }
   }
 
@@ -299,136 +257,253 @@ class _HomeState extends State<Home> {
     _progressDialog!.close();
   }
 
+  Future<List<dynamic>?> getRates() async {
+    final apiUrl = Links.get_rates;
+
+    try {
+      final response = await http.get(
+        Uri.parse(apiUrl),
+      );
+
+      if (response.statusCode == 200) {
+        final rates = json.decode(response.body);
+        return rates;
+      } else {
+        if (kDebugMode) {
+          print('Failed to fetch rates. Status code: ${response.statusCode}');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error occurred while fetching rates: $e');
+      }
+    }
+    return null;
+  }
+
+  void getRatesData() async {
+    final ratesList = await getRates();
+    if (ratesList != null) {
+      setState(() {
+        for (var rate in ratesList) {
+          //add into Rates.rate map
+          Rates.rates[rate['product_name']] = rate['rate'];
+        }
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    //checkIfPaymentDone(User.uid);
+    checkIfPaymentDone(User.uid);
     getDocument();
+    getRatesData();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: const Text('DOT ComplyPro'),
-          centerTitle: true,
-          backgroundColor: Colors.teal[300],
-          automaticallyImplyLeading: false,
-          actions: [
-            PopupMenuButton(
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => LiveNotifications()));
-                    },
-                    child: Text('Notifications'),
-                  ),
+      appBar: AppBar(
+        title: const Text('DOT ComplyPro'),
+        centerTitle: true,
+        backgroundColor: Colors.teal[300],
+        automaticallyImplyLeading: true,
+        actions: [
+          PopupMenuButton(
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => LiveNotifications()));
+                  },
+                  child: Text('Notifications'),
                 ),
-                PopupMenuItem(
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => DriverInfo()));
-                    },
-                    child: Text('Driver Form'),
-                  ),
+              ),
+              PopupMenuItem(
+                child: TextButton(
+                  onPressed: () async {
+                    if (isBocAvailable) {
+                      await _pickDirectory();
+                      await _saveFileToDirectory(bocDocLink, bocDocName);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text('BOC-3 document not Available yet')));
+                    }
+                  },
+                  child: Text('Download BOC-3'),
                 ),
-                PopupMenuItem(
-                  child: TextButton(
-                    onPressed: () async {
-                      if (isBocAvailable) {
-                        await _pickDirectory();
-                        await _saveFileToDirectory(bocDocLink, bocDocName);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content:
-                                    Text('BOC-3 document not Available yet')));
-                      }
-                    },
-                    child: Text('Download BOC-3'),
-                  ),
+              ),
+              PopupMenuItem(
+                child: TextButton(
+                  onPressed: () async {
+                    if (isDrugAvailable) {
+                      await _pickDirectory();
+                      await _saveFileToDirectory(userDrugLink, userDrugName);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text(
+                              'Drug & Alcohol document not Available yet')));
+                    }
+                  },
+                  child: Text('Download Drug & Alcohol'),
                 ),
-                PopupMenuItem(
-                  child: TextButton(
-                    onPressed: () async {
-                      if (isDrugAvailable) {
-                        await _pickDirectory();
-                        await _saveFileToDirectory(userDrugLink, userDrugName);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                            content: Text(
-                                'Drug & Alcohol document not Available yet')));
-                      }
-                    },
-                    child: Text('Download Drug & Alcohol'),
-                  ),
+              ),
+              PopupMenuItem(
+                child: TextButton(
+                  onPressed: () async {
+                    if (isUcrAvailable) {
+                      await _pickDirectory();
+                      await _saveFileToDirectory(ucrDocLink, ucrDocName);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text('UCR document not Available yet')));
+                    }
+                  },
+                  child: Text('Download UCR'),
                 ),
-                PopupMenuItem(
-                  child: TextButton(
-                    onPressed: () async {
-                      if (isUcrAvailable) {
-                        await _pickDirectory();
-                        await _saveFileToDirectory(ucrDocLink, ucrDocName);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content:
-                                    Text('UCR document not Available yet')));
-                      }
-                    },
-                    child: Text('Download UCR'),
-                  ),
+              ),
+              PopupMenuItem(
+                child: TextButton(
+                  onPressed: () async {
+                     Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => Message()));
+                  },
+                  child: Text('Message From Admin'),
                 ),
-              ],
-            ),
-          ],
-        ),
-        body: Center(
-          child: _widgetOptions.elementAt(_selectedIndex),
-        ),
-        bottomNavigationBar: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                blurRadius: 20,
-                color: Colors.black.withOpacity(.1),
-              )
+              ),
             ],
           ),
-          child: SafeArea(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 15.0, vertical: 8),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: GNav(
-                  rippleColor: Colors.grey[300]!,
-                  hoverColor: Colors.grey[100]!,
-                  gap: 8,
-                  activeColor: Colors.black,
-                  iconSize: 24,
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  duration: Duration(milliseconds: 400),
-                  tabBackgroundColor: Colors.grey[100]!,
-                  color: Colors.black,
-                  tabs: tabs,
-                  selectedIndex: _selectedIndex,
-                  onTabChange: (index) {
-                    setState(() {
-                      _selectedIndex = index;
-                    });
-                  },
+        ],
+      ),
+      body: _widgetOptions[_selectedIndex],
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            const DrawerHeader(
+              child: Center(
+                child: SizedBox(
+                  height: 120,
+                  child: Image(
+                    image: AssetImage('assets/logo.png'),
+                  ),
                 ),
               ),
             ),
-          ),
-        ));
+            ListTile(
+              leading: const Icon(LineIcons.user),
+              title: const Text('Driver'),
+              onTap: () {
+                _onMenuItemSelected(0);
+              },
+            ),
+            ListTile(
+              leading: const Icon(LineIcons.truck),
+              title: const Text('Vehicle'),
+              onTap: () {
+                _onMenuItemSelected(1);
+              },
+            ),
+            ListTile(
+              leading: const Icon(LineIcons.blogger),
+              title: const Text('BOC-3'),
+              onTap: () {
+                _onMenuItemSelected(2);
+              },
+            ),
+            ListTile(
+              leading: const Icon(LineIcons.erlang),
+              title: const Text('ECA'),
+              onTap: () {
+                _onMenuItemSelected(3);
+              },
+            ),
+            ListTile(
+              leading: const Icon(LineIcons.uniregistry),
+              title: const Text('UCR'),
+              onTap: () {
+                _onMenuItemSelected(4);
+              },
+            ),
+            ListTile(
+              leading: const Icon(LineIcons.flask),
+              title: const Text('Drug & Alcohol'),
+              onTap: () {
+                _onMenuItemSelected(5);
+              },
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                      margin: const EdgeInsets.only(left: 10.0, right: 20.0),
+                      child: Divider(
+                        color: Colors.black,
+                        height: 36,
+                      )),
+                ),
+                Text('Profiles'),
+                Expanded(
+                  child: Container(
+                      margin: const EdgeInsets.only(left: 20.0, right: 10.0),
+                      child: Divider(
+                        color: Colors.black,
+                        height: 36,
+                      )),
+                ),
+              ],
+            ),
+            ListTile(
+              leading: const Icon(LineIcons.user),
+              title: const Text('Driver Form'),
+              onTap: () {
+                _onMenuItemSelected(6);
+              },
+            ),
+            ListTile(
+              leading: const Icon(LineIcons.truck),
+              title: const Text('Manage Vehicle'),
+              onTap: () {
+                _onMenuItemSelected(7);
+              },
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                      margin: const EdgeInsets.only(left: 10.0, right: 20.0),
+                      child: Divider(
+                        color: Colors.black,
+                        height: 36,
+                      )),
+                ),
+                Text('Others'),
+                Expanded(
+                  child: Container(
+                      margin: const EdgeInsets.only(left: 20.0, right: 10.0),
+                      child: Divider(
+                        color: Colors.black,
+                        height: 36,
+                      )),
+                ),
+              ],
+            ),
+            ListTile(
+              leading: const Icon(LineIcons.lock),
+              title: const Text('Privacy Policy'),
+              onTap: () {
+                _onMenuItemSelected(8);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

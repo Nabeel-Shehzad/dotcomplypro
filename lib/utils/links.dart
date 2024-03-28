@@ -11,6 +11,7 @@ class Links{
   static String notification = "https://dotcomplypro.com/MobileScripts/notifications.php";
   static String send_token = "https://dotcomplypro.com/MobileScripts/send_token.php";
   static String get_driver = "https://dotcomplypro.com/MobileScripts/get_driver.php";
+  static String get_vehicle = "https://dotcomplypro.com/MobileScripts/get_vehicles.php";
   static String files_url = "http://dotcomplypro.com/MobileScripts/";
   static String get_notify = "https://dotcomplypro.com/MobileScripts/get_notify.php";
   static String payment = "https://dotcomplypro.com/MobileScripts/payment.php";
@@ -19,4 +20,7 @@ class Links{
   static String get_ucr_doc = "https://dotcomplypro.com/MobileScripts/get_ucr_doc.php";
   static String get_drug_doc = "https://dotcomplypro.com/MobileScripts/get_drug_doc.php";
   static String update_password = "https://dotcomplypro.com/MobileScripts/update_password.php";
+  static String delete_vehicle = "https://dotcomplypro.com/MobileScripts/delete_vehicle.php";
+  static String get_rates = "https://dotcomplypro.com/MobileScripts/get_rates.php";
+  static String get_messages = "https://dotcomplypro.com/MobileScripts/get_message.php";
 }

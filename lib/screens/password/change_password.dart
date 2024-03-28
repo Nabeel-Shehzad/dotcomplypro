@@ -75,7 +75,7 @@ class _ChangePasswordState extends State<ChangePassword> {
                     height: 200,
                     child: Image.asset('assets/logo.png'),
                   ),
-                  Container(
+                  SizedBox(
                     width: double.maxFinite,
                     child: TextFormField(
                       controller: passwordController,

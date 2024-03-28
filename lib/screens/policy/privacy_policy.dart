@@ -4,7 +4,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../auth/login.dart';
 
 class PrivacyPolicy extends StatefulWidget {
-  const PrivacyPolicy({super.key});
+  bool flag;
+
+  PrivacyPolicy({super.key, required this.flag});
 
   @override
   State<PrivacyPolicy> createState() => _PrivacyPolicyState();
@@ -59,39 +61,42 @@ class _PrivacyPolicyState extends State<PrivacyPolicy> {
               'We may modify this policy periodically to reflect changes in our practices or for other operational, legal, or regulatory reasons.\n\n'
               'Contact Us\n'
               'For further details on our privacy practices, inquiries, or complaints, reach us via email at privacy@dotcomplypro.com or by mail using the information provided below.\n\n'
-              'Your use of our App signifies your agreement to this Privacy Policy. If you disagree with our policy, we request that you refrain from accessing or using our Services or interacting with any other aspect of our business.\n\n'
-              'Thank you for choosing DOTComply PRO.',
+              'Your use of our App signifies your agreement to this Privacy Policy. If you disagree with our policy, we request that you refrain from accessing or using our Services or interacting with any other aspect of our business.\n'
+              'By using our app, customers agree to abide by our terms and conditions, which include a strict no-refunds policy and the acknowledgment of full responsibility for any purchases made through the app.\n\n'
+              'Thank you for choosing DOTComply PRO.\n',
               style: TextStyle(fontSize: 16.0),
             ),
             Container(
               height: 15,
             ),
-            Row(
-              children: <Widget>[
-                Checkbox(
-                  value: _isAgreed,
-                  onChanged: (bool? value) {
-                    setState(() {
-                      _isAgreed = value ?? false;
-                    });
-                  },
-                ),
-                Expanded(
-                  child: Text('I agree to the terms of the privacy policy.'),
-                ),
-              ],
-            ),
-            SizedBox(height: 20.0),
-            ElevatedButton(
-              child: Text('Continue'),
-              onPressed: _isAgreed
-                  ? () async {
-                      await _setAgreement();
-                      Navigator.pushReplacement(context,
-                          MaterialPageRoute(builder: (context) => Login()));
-                    }
-                  : null,
-            ),
+            if (!widget.flag) ...{
+              Row(
+                children: <Widget>[
+                  Checkbox(
+                    value: _isAgreed,
+                    onChanged: (bool? value) {
+                      setState(() {
+                        _isAgreed = value ?? false;
+                      });
+                    },
+                  ),
+                  Expanded(
+                    child: Text('I agree to the terms of the privacy policy.'),
+                  ),
+                ],
+              ),
+              SizedBox(height: 20.0),
+              ElevatedButton(
+                onPressed: _isAgreed
+                    ? () async {
+                        await _setAgreement();
+                        Navigator.pushReplacement(context,
+                            MaterialPageRoute(builder: (context) => Login()));
+                      }
+                    : null,
+                child: Text('Continue'),
+              ),
+            }
           ],
         ),
       ),

@@ -48,7 +48,7 @@ class NotificationServices {
         print("notifications title:${notification!.title}");
         print("notifications body:${notification.body}");
         print('count:${android!.count}');
-        print('channel id:${android!.channelId.toString()}');
+        print('channel id:${android.channelId.toString()}');
         print('data:${message.data.toString()}');
       }
 

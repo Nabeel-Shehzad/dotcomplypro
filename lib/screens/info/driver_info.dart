@@ -20,6 +20,7 @@ class DriverInfo extends StatefulWidget {
 class _DriverInfoState extends State<DriverInfo> {
   String fullName = 'None';
   String dateHired = 'None';
+  String drivers = 'None';
   String address = 'None';
   String dob = 'None';
   String ssn = 'None';
@@ -49,32 +50,32 @@ class _DriverInfoState extends State<DriverInfo> {
 
   ProgressDialog? _progressDialog;
 
-    Future<Map<String, dynamic>?> fetchDriverDetails(String userID) async {
-      final apiUrl = Links.get_driver;
+  Future<Map<String, dynamic>?> fetchDriverDetails(String userID) async {
+    final apiUrl = Links.get_driver;
 
-      try {
-        final response = await http.post(
-          Uri.parse(apiUrl),
-          body: {'user_id': userID},
-        );
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        body: {'user_id': userID},
+      );
 
-        if (response.statusCode == 200) {
-          final driverData = json.decode(response.body);
-          return driverData;
-        } else {
-          if (kDebugMode) {
-            print(
-                'Failed to fetch driver details. Status code: ${response.statusCode}');
-          }
-        }
-      } catch (e) {
+      if (response.statusCode == 200) {
+        final driverData = json.decode(response.body);
+        return driverData;
+      } else {
         if (kDebugMode) {
-          print('Error occurred while fetching driver details: $e');
+          print(
+              'Failed to fetch driver details. Status code: ${response.statusCode}');
         }
       }
-
-      return null;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error occurred while fetching driver details: $e');
+      }
     }
+
+    return null;
+  }
 
   void getDriverDetails() async {
     final userId = User.uid;
@@ -82,7 +83,8 @@ class _DriverInfoState extends State<DriverInfo> {
     if (driverDetails != null) {
       setState(() {
         fullName =
-            '${driverDetails['first_name']} ${driverDetails['last_name']} ';
+            '${driverDetails['first_name']} ${driverDetails['last_name']}';
+        drivers = '${driverDetails['drivers']}';
         dateHired = '${driverDetails['date_hired']}';
         address = '${driverDetails['address']}';
         dob = '${driverDetails['date_of_birth']}';
@@ -195,11 +197,6 @@ class _DriverInfoState extends State<DriverInfo> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Driver Info'),
-        centerTitle: true,
-        backgroundColor: Colors.teal[300],
-      ),
       body: SingleChildScrollView(
         physics: BouncingScrollPhysics(),
         child: Column(
@@ -207,13 +204,19 @@ class _DriverInfoState extends State<DriverInfo> {
             Center(
               child: SizedBox(
                 width: double.infinity,
-                child: DataTable(columns: [
+                child: DataTable(
+                  dataRowMaxHeight: 70,
+                    columns: [
                   DataColumn(label: Text('Fields')),
                   DataColumn(label: Text('Information')),
                 ], rows: [
                   DataRow(cells: [
                     DataCell(Text('Full Name')),
                     DataCell(Text(fullName)),
+                  ]),
+                  DataRow(cells: [
+                    DataCell(Text('Drivers')),
+                    DataCell(Text(drivers)),
                   ]),
                   DataRow(cells: [
                     DataCell(Text('Date Hired')),

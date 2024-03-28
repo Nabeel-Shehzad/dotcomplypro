@@ -6,7 +6,7 @@ class NotificationCard extends StatelessWidget {
   final String description;
   final String deadline;
 
-  NotificationCard(
+  const NotificationCard(
       {required this.dueDate,
       required this.description,
       required this.deadline,
