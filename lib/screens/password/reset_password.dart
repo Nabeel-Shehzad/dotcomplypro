@@ -18,7 +18,7 @@ class _ResetPasswordState extends State<ResetPassword> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    
+    //gmail SMTP
   }
 
   @override
