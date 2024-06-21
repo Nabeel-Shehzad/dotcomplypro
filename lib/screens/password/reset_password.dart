@@ -18,13 +18,7 @@ class _ResetPasswordState extends State<ResetPassword> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    myauth.setSMTP(
-        host: "smtp.gmail.com",
-        auth: true,
-        username: "nabeelshahzad88@gmail.com",
-        password: "eedcxwpnaydwjybd",
-        secure: "TLS",
-        port: 587);
+    
   }
 
   @override
